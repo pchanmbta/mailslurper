@@ -217,7 +217,13 @@ func (c *ServiceController) GetMailMessage(ctx echo.Context) error {
 	}
 
 	c.Logger.Infof("Mail item %s retrieved", mailID)
-	return context.HTML(http.StatusOK, mailItem.Body)
+	
+	
+	if validated_mail_body, bodyErr := base64.StdEncoding.DecodeString(mailItem.Body); bodyErr != nil {
+		validated_mail_body = mailItem.Body
+	}
+	
+	return context.HTML(http.StatusOK, validated_mail_body)
 }
 
 /*
