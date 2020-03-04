@@ -269,8 +269,6 @@
 			},
 			opens: "right",
 			drops: "down",
-			minDate: moment().subtract(1, "month").startOf("month"),
-			maxDate: moment().endOf("month"),
 			startDate: searchCriteria.searchStart,
 			endDate: searchCriteria.searchEnd
 		}, function (start, end) {

@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+	"io"
 
 	"github.com/labstack/echo"
 	"github.com/mailslurper/mailslurper/pkg/auth/auth"
@@ -78,6 +79,7 @@ func (c *ServiceController) GetMail(ctx echo.Context) error {
 	var mailID string
 	var result *mailslurper.MailItem
 	var err error
+	var byte_buffer bytes.Buffer
 
 	context := contexts.GetAdminContext(ctx)
 
@@ -89,6 +91,13 @@ func (c *ServiceController) GetMail(ctx echo.Context) error {
 	if result, err = c.Database.GetMailByID(mailID); err != nil {
 		c.Logger.Errorf("Problem getting mail item %s - %s", mailID, err.Error())
 		return context.String(http.StatusInternalServerError, "Problem getting mail item")
+	}
+	
+	if body_byte, err := base64.StdEncoding.DecodeString(result.Body); err == nil {
+	//Change to use stringbuilder??
+		reader := bytes.NewReader(body_byte)
+		byte_buffer.ReadFrom(reader)
+		result.Body = byte_buffer.String()
 	}
 
 	c.Logger.Infof("Mail item %s retrieved", mailID)
@@ -203,6 +212,9 @@ func (c *ServiceController) GetMailMessage(ctx echo.Context) error {
 	var mailID string
 	var mailItem *mailslurper.MailItem
 	var err error
+	var validated_mail_body string
+	var reader io.Reader
+	var byte_buffer bytes.Buffer
 
 	context := contexts.GetAdminContext(ctx)
 
@@ -218,8 +230,12 @@ func (c *ServiceController) GetMailMessage(ctx echo.Context) error {
 
 	c.Logger.Infof("Mail item %s retrieved", mailID)
 	
-	
-	if validated_mail_body, bodyErr := base64.StdEncoding.DecodeString(mailItem.Body); bodyErr != nil {
+	if body_byte, err := base64.StdEncoding.DecodeString(mailItem.Body); err == nil {
+	//Change to use stringbuilder??
+		reader = bytes.NewReader(body_byte)
+		byte_buffer.ReadFrom(reader)
+		validated_mail_body = byte_buffer.String()
+	} else {
 		validated_mail_body = mailItem.Body
 	}
 	
